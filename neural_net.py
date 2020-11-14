@@ -15,26 +15,32 @@ class NeuralNetwork:
     self.network = network
     self.alpha = alpha
     self.deltas = [[] for x in range(len(network))]
+    self.gradients = [[] for x in range(len(network))]
     self.outputs = [[] for x in range(len(network))]
 
     if initial_weights:
       self.weights = initial_weights
     else:
       # Inicializa a rede com pesos aleatórios
-      self.weights = [[] for x in range(len(network))]
-      for layer in range(len(network)):
-        n_inputs = 1 if layer == 0 else network[layer - 1]
-        # Inclui o peso de bias caso a camada não seja a primeira (input)
-        if layer is not 0:
-          n_inputs = n_inputs + 1
+      self.weights = []
+      for layer in range(len(network) - 1):
+        self.weights.append([])
+        # Número de entradas da camada + bias
+        n_inputs = network[layer] + 1
         # Gera um conjunto de pesos de entrada para cada neurônio da camada
-        for neuron in range(network[layer]):
-          self.weights[layer].append(np.random.uniform(low=0.0, high=1.0, size=n_inputs))
+        for _ in range(network[layer + 1]):
+          self.weights[layer].append(np.random.uniform(low=-1.0, high=1.0, size=n_inputs))
 
-  # TODO: Calcula os pesos da rede
-  def _update_weights(self):
-    pass
-
+  # Calcula as saídas (ativação) dos neurônios
+  def _update_outputs(self, inputs):
+    for layer in range(len(self.network)):
+      if layer == 0:
+        input_weights = [item[0] for item in self.weights[layer]]
+        self.outputs[layer] = input_weights * np.array(inputs)
+      else:
+        neuron_inputs = np.insert(self.outputs[layer - 1], 0, 1)
+        self.outputs[layer] = np.array([activation(neuron_inputs, neuron_weights) for neuron_weights in self.weights[layer]])
+  
   # Calcula os deltas da rede
   def _update_deltas(self, expected_output):
     for layer in reversed(range(len(self.network))):
@@ -47,40 +53,48 @@ class NeuralNetwork:
           delta = np.sum(np.multiply(output_weights, output_deltas))*activation*(1-activation)
           self.deltas[layer].append(delta)
       else: # Para a camada de output
-        self.deltas[layer].append(self.outputs[layer] - expected_output)
-  
-  # Calcula as saídas (ativação) dos neurônios
-  def _update_outputs(self, inputs):
-    for layer in range(len(self.network)):
-      if layer == 0:
-        input_weights = [item[0] for item in self.weights[layer]]
-        self.outputs[layer] = input_weights * np.array(inputs)
-      else:
-        neuron_inputs = np.insert(self.outputs[layer - 1], 0, 1)
-        self.outputs[layer] = np.array([activation(neuron_inputs, neuron_weights) for neuron_weights in self.weights[layer]])
+        delta = self.outputs[layer] - expected_output
+        self.deltas[layer] = delta
+
+  # TODO: Calcula os gradientes para os pesos da rede
+  def _update_gradients(self):
+    for layer in range(len(network)):
+      n_inputs = 1 if layer == 0 else network[layer - 1]
+      # Inclui o peso de bias caso a camada não seja a primeira (input)
+      if layer is not 0:
+        n_inputs = n_inputs + 1
+      # Gera um conjunto de gradientes para cada neurônio da camada
+      for neuron in range(network[layer]):
+        self.gradients[layer].append(np.random.normal(0, 1, size=n_inputs))
+
+  # TODO: Calcula os pesos da rede
+  def _update_weights(self):
+    pass
 
   # Treina a rede neural
   def train(self, inputs_array, outputs_array):
     for inputs, outputs in zip(inputs_array, outputs_array):
       self._update_outputs(inputs)
       self._update_deltas(outputs)
+      self._update_weights()
 
   # Plota um grafo representando a rede neural
   def plot(self):
     dot = Digraph()
-    dot.attr(rankdir='LR', splines='false', ranksep='.8', nodesep='.4', labelloc='b')
+    dot.attr(rankdir='LR', splines='false', ranksep='.8', nodesep='.4')
     dot.node_attr['shape'] = 'circle'
     dot.edge_attr['arrowsize'] = '.5'
     dot.edge_attr['penwidth'] = '.5'
     dot.node_attr['margin'] = '0'
     for layer in range(len(self.network)):
       for neuron in range(self.network[layer]):
-        if layer < len(self.network) - 1:
-          # Se não for a última camada
+        label1 = get_label(layer, neuron)
+        if layer != 0:
+          dot.edge('Bias {0}'.format(layer), label1, label='{:.3f}'.format(self.weights[layer - 1][neuron][0]))
+        if layer != len(self.network) - 1:
           for neuron_next in range(self.network[layer + 1]):
-            weights1 = self.weights[layer][neuron]
-            weights2 = self.weights[layer + 1][neuron_next]
-            dot.edge('\n'.join(format(x, "^.3f") for x in weights1), '\n'.join(format(x, "^.3f") for x in weights2))
+            label2 = get_label(layer + 1, neuron_next)
+            dot.edge(label1, label2, label='{:.3f}'.format(self.weights[layer][neuron_next][neuron + 1]))
     display(dot)
 
 ## Métodos Auxiliares
@@ -95,7 +109,7 @@ def activation(inputs, weights):
 
 # Gera uma label para um determinado neurônio
 def get_label(layer, neuron):
-  return 'l{0}n{1}'.format(layer, neuron)
+  return 'L {0}\nN {1}'.format(layer, neuron)
 
 
   
