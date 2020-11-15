@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import pandas
 from graphviz import Digraph
 
 # Rede Neural
@@ -14,8 +13,8 @@ class NeuralNetwork:
   def __init__(self, network, initial_weights=None, alpha=0.05):
     self.network = network
     self.alpha = alpha
-    self.deltas = [[] for x in range(len(network))]
-    self.gradients = [[] for x in range(len(network))]
+    self.deltas = [[] for x in range(len(network) - 1)]
+    self.gradients = [[] for x in range(len(network) - 1)]
     self.outputs = [[] for x in range(len(network))]
 
     if initial_weights:
@@ -35,48 +34,46 @@ class NeuralNetwork:
   def _update_outputs(self, inputs):
     for layer in range(len(self.network)):
       if layer == 0:
-        input_weights = [item[0] for item in self.weights[layer]]
-        self.outputs[layer] = input_weights * np.array(inputs)
+        self.outputs[layer] = np.array(inputs)
       else:
         neuron_inputs = np.insert(self.outputs[layer - 1], 0, 1)
-        self.outputs[layer] = np.array([activation(neuron_inputs, neuron_weights) for neuron_weights in self.weights[layer]])
+        self.outputs[layer] = np.array([activation(neuron_inputs, neuron_weights) for neuron_weights in self.weights[layer - 1]])
   
   # Calcula os deltas da rede
   def _update_deltas(self, expected_output):
     for layer in reversed(range(len(self.network))):
-      # Se não for a camada de output
-      if layer < len(self.network) - 1:
+      # Para as camadas intermediárias:
+      if layer < len(self.network) - 1 and layer != 0:
         for neuron in range(self.network[layer]):
-          output_weights = [item[neuron + 1] for item in self.weights[layer + 1]]
-          output_deltas = self.deltas[layer + 1]
+          output_weights = [item[neuron + 1] for item in self.weights[layer]]
+          output_deltas = self.deltas[layer]
           activation = self.outputs[layer][neuron]
           delta = np.sum(np.multiply(output_weights, output_deltas))*activation*(1-activation)
-          self.deltas[layer].append(delta)
-      else: # Para a camada de output
-        delta = self.outputs[layer] - expected_output
-        self.deltas[layer] = delta
+          self.deltas[layer - 1].append(delta)
+      elif layer == len(self.network) - 1: # Para a camada de output
+        self.deltas[layer - 1] = self.outputs[layer] - expected_output
 
-  # TODO: Calcula os gradientes para os pesos da rede
+  # Calcula os gradientes para os pesos da rede
   def _update_gradients(self):
-    for layer in range(len(network)):
-      n_inputs = 1 if layer == 0 else network[layer - 1]
-      # Inclui o peso de bias caso a camada não seja a primeira (input)
-      if layer is not 0:
-        n_inputs = n_inputs + 1
-      # Gera um conjunto de gradientes para cada neurônio da camada
-      for neuron in range(network[layer]):
-        self.gradients[layer].append(np.random.normal(0, 1, size=n_inputs))
+    for layer in range(len(self.network)):
+      if layer != 0:
+        for neuron in range(self.network[layer]):
+          origin_activations = np.insert(self.outputs[layer - 1], 0, 1)
+          delta = self.deltas[layer - 1][neuron]
+          self.gradients[layer - 1].append(origin_activations * delta)
 
   # TODO: Calcula os pesos da rede
   def _update_weights(self):
+    # for layer in self.network:
     pass
-
+      
   # Treina a rede neural
   def train(self, inputs_array, outputs_array):
     for inputs, outputs in zip(inputs_array, outputs_array):
       self._update_outputs(inputs)
       self._update_deltas(outputs)
       self._update_weights()
+      self._update_gradients()
 
   # Plota um grafo representando a rede neural
   def plot(self):
