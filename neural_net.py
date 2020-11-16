@@ -13,9 +13,9 @@ class NeuralNetwork:
   def __init__(self, network, initial_weights=None, alpha=0.05):
     self.network = network
     self.alpha = alpha
-    self.deltas = [[] for x in range(len(network) - 1)]
-    self.gradients = [[] for x in range(len(network) - 1)]
-    self.outputs = [[] for x in range(len(network))]
+    self.deltas = [[] for _ in np.empty([len(network) - 1])]
+    self.gradients = [[] for _ in np.empty([len(network) - 1])]
+    self.outputs = [[] for _ in np.empty([len(network)])]
 
     if initial_weights:
       self.weights = initial_weights
@@ -49,7 +49,7 @@ class NeuralNetwork:
           output_deltas = self.deltas[layer]
           activation = self.outputs[layer][neuron]
           delta = np.sum(np.multiply(output_weights, output_deltas))*activation*(1-activation)
-          self.deltas[layer - 1].append(delta)
+          self.deltas[layer - 1] = np.append(self.deltas[layer - 1], delta)
       elif layer == len(self.network) - 1: # Para a camada de output
         self.deltas[layer - 1] = self.outputs[layer] - expected_output
 
@@ -57,23 +57,26 @@ class NeuralNetwork:
   def _update_gradients(self):
     for layer in range(len(self.network)):
       if layer != 0:
+        self.gradients[layer - 1] = []
         for neuron in range(self.network[layer]):
           origin_activations = np.insert(self.outputs[layer - 1], 0, 1)
           delta = self.deltas[layer - 1][neuron]
           self.gradients[layer - 1].append(origin_activations * delta)
 
-  # TODO: Calcula os pesos da rede
+  # Calcula os pesos da rede
   def _update_weights(self):
-    # for layer in self.network:
-    pass
+    print(self.weights)
+    print(self.gradients)
+    for layer in range(len(self.weights)):
+      self.weights[layer] = self.weights[layer] - self.alpha * np.asarray(self.gradients[layer])
       
   # Treina a rede neural
   def train(self, inputs_array, outputs_array):
     for inputs, outputs in zip(inputs_array, outputs_array):
       self._update_outputs(inputs)
       self._update_deltas(outputs)
-      self._update_weights()
       self._update_gradients()
+      self._update_weights()
 
   # Plota um grafo representando a rede neural
   def plot(self):
