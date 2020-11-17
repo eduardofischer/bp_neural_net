@@ -52,7 +52,7 @@ with open(args.dataset) as dataset_file:
 # Roda a rede neural com os parametros obtidos.
 net = nn.NeuralNetwork(network, initial_weights, 0.05, 0.0)
 
-net.train2(dataset)
+net.train(dataset)
 
 print('Network: \n{}\n'.format(net.network))
 

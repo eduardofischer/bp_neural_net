@@ -84,16 +84,7 @@ class NeuralNetwork:
       self.weights[layer] = self.weights[layer] - self.alpha * np.asarray(self.gradients[layer])
       
   # Treina a rede neural
-  def train(self, inputs_array, outputs_array, n_ephocs=1):
-    for _ in range(n_ephocs):
-      for inputs, exp_outputs in zip(inputs_array, outputs_array):
-        self._update_outputs(inputs)
-        self._update_deltas(exp_outputs)
-        self._update_gradients()
-      self._regularize_gradients(len(inputs_array))
-      self._update_weights()
-
-  def train2(self, dataset, n_ephocs=1):
+  def train(self, dataset, n_ephocs=1):
     for _ in range(n_ephocs):
       for instance in dataset:
         self._update_outputs(instance[0])
@@ -101,26 +92,26 @@ class NeuralNetwork:
         self._update_gradients()
       self._regularize_gradients(len(dataset))
       self._update_weights()
-      
-  def numerical_gradients(self, inputs_array, outputs_array, epsilon):
+
+  def numerical_gradients(self, dataset, epsilon):
     for layer in range(len(self.weights)):
       for neuron in range(len(self.weights[layer])):
         self.gradients[layer].append([])
         for weight in range(len(self.weights[layer][neuron])):
           self.gradients[layer][neuron].append(0)
           self.weights[layer][neuron][weight] = self.weights[layer][neuron][weight] + epsilon
-          grad = self.cost(inputs_array, outputs_array)
+          grad = self.cost(dataset)
           self.weights[layer][neuron][weight] = self.weights[layer][neuron][weight] - 2*epsilon
-          grad = grad - self.cost(inputs_array, outputs_array)
+          grad = grad - self.cost(dataset)
           self.gradients[layer][neuron][weight] = grad / (2* epsilon)
 
   # Função de custo
-  def cost(self, inputs_array, outputs_array):
+  def cost(self, dataset):
     cost = 0
-    for inputs, exp_outputs in zip(inputs_array, outputs_array):
-      self._update_outputs(inputs)
+    for instance in dataset:
+      self._update_outputs(instance[0])
       outputs = self.outputs[-1]
-      J = -exp_outputs * math.log(outputs) - (1 - exp_outputs) * math.log(1 - outputs)
+      J = -exp_outputs * math.log(instance[1]) - (1 - exp_outputs) * math.log(1 - instance[1])
       cost = cost + J
     cost = cost / len(inputs_array)
     S = [[] for layer in self.weights]
