@@ -51,19 +51,17 @@ with open(args.dataset) as dataset_file:
 
 # Roda a rede neural com os parametros obtidos.
 net = nn.NeuralNetwork(network, initial_weights, 0.05, 0.0)
-
 net.train(dataset)
 
-print('Network: \n{}\n'.format(net.network))
+# Printa os gradientes no formato exigido.
+for layer in net.gradients:
+  i = 0
+  neurons_in_layer = len(layer)
+  for neuron_weights in layer:
+    neuron_weights = ["%.3f" % weight for weight in neuron_weights]
+    print(*neuron_weights, sep=', ', end='')
+    i += 1
+    if i != neurons_in_layer:
+      print('; ', end='')
+  print()
 
-print('Weights:')
-print(net.weights)
-
-print('Deltas:')
-print(net.deltas)
-
-print('Gradients:')
-print(net.gradients)
-
-print('Outputs:')
-print(net.outputs)
