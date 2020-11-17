@@ -47,20 +47,13 @@ dataset = open(args.dataset)
 # Roda a rede neural com os parametros obtidos.
 net = nn.NeuralNetwork(network, initial_weights, 0.05, lamb)
 
-# Printa as os resultados.
-net.plot()
-
 print('Network: \n{}\n'.format(net.network))
 
 print('Weights:')
 print(net.weights)
 
-def print_list_of_lists(list):
-    for e in list:
-        print(['{:.5f}'.format(n) for n in e])
-
 print('Deltas:')
-print_list_of_lists(net.deltas)
+print(net.deltas)
 
 print('Gradients:')
 print(net.gradients)

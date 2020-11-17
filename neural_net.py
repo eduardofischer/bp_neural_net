@@ -10,10 +10,10 @@ from graphviz import Digraph
 # Ex.: [[0.2, 0.3, 0.5], [0.5, 0.4, 0.3, 0.6], [0.8]]
 # - alpha: taxa de aprendizagem
 class NeuralNetwork:
-  def __init__(self, network, initial_weights=None, alpha=0.05, reg=0.25):
+  def __init__(self, network, initial_weights=None, alpha=0.05, lamb=0.25):
     self.network = network
     self.alpha = alpha
-    self.lamb = reg
+    self.lamb = lamb
     self.deltas = [[] for _ in np.empty([len(network) - 1])]
     self.gradients = [[] for _ in np.empty([len(network) - 1])]
     self.outputs = [[] for _ in np.empty([len(network)])]
