@@ -126,9 +126,10 @@ class NeuralNetwork:
     return cost + S_sum
 
   # Avalia a saída da rede para uma determinada entrada
-  def evaluate(self, inputs):
+  def classify(self, inputs, n_outputs=1):
     self._update_outputs(inputs)
-    return self.outputs[-1]
+    if n_outputs == 1:
+      return 1 if self.outputs[-1][0] > .5 else 0
 
   # Plota um grafo representando a rede neural
   def plot(self):
