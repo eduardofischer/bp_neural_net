@@ -93,6 +93,15 @@ class NeuralNetwork:
       self._regularize_gradients(len(inputs_array))
       self._update_weights()
 
+  def train2(self, dataset, n_ephocs=1):
+    for _ in range(n_ephocs):
+      for instance in dataset:
+        self._update_outputs(instance[0])
+        self._update_deltas(instance[1])
+        self._update_gradients()
+      self._regularize_gradients(len(dataset))
+      self._update_weights()
+
   # Função de custo
   def cost(self, inputs_array, outputs_array):
     cost = 0
