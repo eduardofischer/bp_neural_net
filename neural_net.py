@@ -101,6 +101,18 @@ class NeuralNetwork:
         self._update_gradients()
       self._regularize_gradients(len(dataset))
       self._update_weights()
+      
+  def numerical_gradients(self, inputs_array, outputs_array, epsilon):
+    for layer in range(len(self.weights)):
+      for neuron in range(len(self.weights[layer])):
+        self.gradients[layer].append([])
+        for weight in range(len(self.weights[layer][neuron])):
+          self.gradients[layer][neuron].append(0)
+          self.weights[layer][neuron][weight] = self.weights[layer][neuron][weight] + epsilon
+          grad = self.cost(inputs_array, outputs_array)
+          self.weights[layer][neuron][weight] = self.weights[layer][neuron][weight] - 2*epsilon
+          grad = grad - self.cost(inputs_array, outputs_array)
+          self.gradients[layer][neuron][weight] = grad / (2* epsilon)
 
   # Função de custo
   def cost(self, inputs_array, outputs_array):
@@ -126,9 +138,10 @@ class NeuralNetwork:
     return cost + S_sum
 
   # Avalia a saída da rede para uma determinada entrada
-  def evaluate(self, inputs):
+  def classify(self, inputs, n_outputs=1):
     self._update_outputs(inputs)
-    return self.outputs[-1]
+    if n_outputs == 1:
+      return 1 if self.outputs[-1][0] > .5 else 0
 
   # Plota um grafo representando a rede neural
   def plot(self):
