@@ -12,8 +12,22 @@ args = parser.parse_args()
 
 # Parse network description file.
 with open(args.network) as network_file:
-  network = network_file.read().splitlines()
+  network = [float(i) for i in network_file.read().splitlines()]
 
-print(network)
+lamb = network.pop(0)
+
+print(f'lamb: {lamb}')
+print(f'network: {network}')
 
 # Parse initial weights file.
+initial_weights = []
+with open(args.initial_weights) as weights_file:
+  line = weights_file.readline()
+  while line != '':
+    initial_weights.append([list(map(float, layer.split(','))) for layer in line.split(';')])
+    line = weights_file.readline()
+
+print(f'initial_weights: {initial_weights}')
+
+# Obtain dataset.
+dataset = open(args.dataset)
