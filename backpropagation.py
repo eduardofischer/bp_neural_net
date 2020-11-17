@@ -58,7 +58,7 @@ for layer in net.gradients:
   i = 0
   neurons_in_layer = len(layer)
   for neuron_weights in layer:
-    neuron_weights = ["%.3f" % weight for weight in neuron_weights]
+    neuron_weights = ["%.5f" % weight for weight in neuron_weights]
     print(*neuron_weights, sep=', ', end='')
     i += 1
     if i != neurons_in_layer:
