@@ -111,8 +111,9 @@ class NeuralNetwork:
     for instance in dataset:
       self._update_outputs(instance[0])
       outputs = self.outputs[-1]
-      J = -instance[1] * math.log(outputs) - (1 - instance[1]) * math.log(1 - outputs)
-      cost = cost + J
+      for out in instance[1]:
+        J = - out * math.log(outputs) - (1 - out) * math.log(1 - outputs)
+        cost = cost + J
     cost = cost / len(dataset)
     S = [[] for layer in self.weights]
     S_sum = (self.lamb/(2*len(dataset)))
