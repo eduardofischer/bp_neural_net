@@ -13,7 +13,7 @@ class NeuralNetwork:
   def __init__(self, network, initial_weights=None, alpha=0.05, reg=0.25):
     self.network = network
     self.alpha = alpha
-    self.reg = reg
+    self.lamb = reg
     self.deltas = [[] for _ in np.empty([len(network) - 1])]
     self.gradients = [[] for _ in np.empty([len(network) - 1])]
     self.outputs = [[] for _ in np.empty([len(network)])]
@@ -61,11 +61,22 @@ class NeuralNetwork:
   def _update_gradients(self):
     for layer in range(len(self.network)):
       if layer != 0:
-        self.gradients[layer - 1] = []
+        if len(self.gradients[layer - 1]) == 0:
+          self.gradients[layer - 1] = [np.zeros(self.network[layer - 1] + 1) for _ in range(self.network[layer])]
         for neuron in range(self.network[layer]):
           origin_activations = np.insert(self.outputs[layer - 1], 0, 1)
           delta = self.deltas[layer - 1][neuron]
-          self.gradients[layer - 1].append(origin_activations * delta)
+          self.gradients[layer - 1][neuron] = self.gradients[layer - 1][neuron] + (origin_activations * delta)
+
+  def _regularize_gradients(self, n):
+    P = [[] for _ in np.empty([len(self.network) - 1])]
+    for layer in range(len(self.weights)):
+      # Multiplica todos os pesos por lambda
+      # Zera os pesos de bias, que não devem multiplicados por lambda
+      P[layer] = np.asarray(self.weights[layer]) * self.lamb
+      for neuron in range(len(self.weights[layer])):
+        P[layer][neuron][0] = 0
+      self.gradients[layer] = (self.gradients[layer] + P[layer])/n
 
   # Calcula os pesos da rede
   def _update_weights(self):
@@ -79,7 +90,8 @@ class NeuralNetwork:
         self._update_outputs(inputs)
         self._update_deltas(exp_outputs)
         self._update_gradients()
-        self._update_weights()
+      self._regularize_gradients(len(inputs_array))
+      self._update_weights()
 
   # Função de custo
   def cost(self, inputs_array, outputs_array):
@@ -91,9 +103,9 @@ class NeuralNetwork:
       cost = cost + J
     cost = cost / len(inputs_array)
     S = [[] for layer in self.weights]
-    S_sum = (self.reg/(2*len(inputs_array)))
+    S_sum = (self.lamb/(2*len(inputs_array)))
 
-    if self.reg != 0.0:
+    if self.lamb != 0.0:
       # Eleva todos os pesos ao quadrado
       # Restaura os pesos de bias, que não devem ser elevados ao quadrado
       for layer in range(len(self.weights)):
