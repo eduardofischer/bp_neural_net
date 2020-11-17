@@ -46,16 +46,12 @@ dataset = []
 with open(args.dataset) as dataset_file:
   line = dataset_file.readline()
   while line != '':
-    dataset.append([list(map(float, instance.split(',')))[0] for instance in line.split(';')])
+    dataset.append([list(map(float, instance.split(','))) for instance in line.split(';')])
     line = dataset_file.readline()
 
 # Roda a rede neural com os parametros obtidos.
-print(f'network: {network}')
-print(f'initial_weights: {initial_weights}')
-print(f'lamb: {lamb}')
 net = nn.NeuralNetwork(network, initial_weights, 0.05, 0.0)
 
-#net.train(dataset[0], dataset[1])
 net.train2(dataset)
 
 print('Network: \n{}\n'.format(net.network))
