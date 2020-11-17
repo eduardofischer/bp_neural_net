@@ -84,8 +84,8 @@ class NeuralNetwork:
       self.weights[layer] = self.weights[layer] - self.alpha * np.asarray(self.gradients[layer])
       
   # Treina a rede neural
-  def train(self, dataset, n_ephocs=1):
-    for _ in range(n_ephocs):
+  def train(self, dataset, n_epochs=1):
+    for _ in range(n_epochs):
       for instance in dataset:
         self._update_outputs(instance[0])
         self._update_deltas(instance[1])
@@ -111,11 +111,11 @@ class NeuralNetwork:
     for instance in dataset:
       self._update_outputs(instance[0])
       outputs = self.outputs[-1]
-      J = -exp_outputs * math.log(instance[1]) - (1 - exp_outputs) * math.log(1 - instance[1])
+      J = -instance[1] * math.log(outputs) - (1 - instance[1]) * math.log(1 - outputs)
       cost = cost + J
-    cost = cost / len(inputs_array)
+    cost = cost / len(dataset)
     S = [[] for layer in self.weights]
-    S_sum = (self.lamb/(2*len(inputs_array)))
+    S_sum = (self.lamb/(2*len(dataset)))
 
     if self.lamb != 0.0:
       # Eleva todos os pesos ao quadrado
