@@ -1,4 +1,5 @@
 import argparse
+import neural_net as nn
 
 parser = argparse.ArgumentParser(description='Backpropagation Neural Network.')
 parser.add_argument('network', metavar='network', type=str,
@@ -32,9 +33,6 @@ with open(args.network) as network_file:
 lamb = aux.pop(0)
 network = [int(i) for i in aux]
 
-print(f'lamb: {lamb}')
-print(f'network: {network}')
-
 # Faz o parse do arquivo que contém os pesos iniciais.
 initial_weights = []
 with open(args.initial_weights) as weights_file:
@@ -43,7 +41,29 @@ with open(args.initial_weights) as weights_file:
     initial_weights.append([list(map(float, layer.split(','))) for layer in line.split(';')])
     line = weights_file.readline()
 
-print(f'initial_weights: {initial_weights}')
-
-# Obtém o arquivo contendo o dataset.
+# Obtém o arquivo contendo o dataset. Este precisa ser fechado ao final do programa.
 dataset = open(args.dataset)
+
+# Roda a rede neural com os parametros obtidos.
+net = nn.NeuralNetwork(network, initial_weights, 0.05, lamb)
+
+# Printa as os resultados.
+net.plot()
+
+print('Network: \n{}\n'.format(net.network))
+
+print('Weights:')
+print(net.weights)
+
+def print_list_of_lists(list):
+    for e in list:
+        print(['{:.5f}'.format(n) for n in e])
+
+print('Deltas:')
+print_list_of_lists(net.deltas)
+
+print('Gradients:')
+print(net.gradients)
+
+print('Outputs:')
+print(net.outputs)
