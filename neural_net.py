@@ -10,9 +10,10 @@ from graphviz import Digraph
 # Ex.: [[0.2, 0.3, 0.5], [0.5, 0.4, 0.3, 0.6], [0.8]]
 # - alpha: taxa de aprendizagem
 class NeuralNetwork:
-  def __init__(self, network, initial_weights=None, alpha=0.05):
+  def __init__(self, network, initial_weights=None, alpha=0.05, reg=0.25):
     self.network = network
     self.alpha = alpha
+    self.reg = reg
     self.deltas = [[] for _ in np.empty([len(network) - 1])]
     self.gradients = [[] for _ in np.empty([len(network) - 1])]
     self.outputs = [[] for _ in np.empty([len(network)])]
@@ -36,7 +37,9 @@ class NeuralNetwork:
       if layer == 0:
         self.outputs[layer] = np.array(inputs)
       else:
+        # Insere o bias (1) nas entradas da camada
         neuron_inputs = np.insert(self.outputs[layer - 1], 0, 1)
+        # Calcula o output dos neurônios da camada
         self.outputs[layer] = np.array([activation(neuron_inputs, neuron_weights) for neuron_weights in self.weights[layer - 1]])
   
   # Calcula os deltas da rede
@@ -44,6 +47,7 @@ class NeuralNetwork:
     for layer in reversed(range(len(self.network))):
       # Para as camadas intermediárias:
       if layer < len(self.network) - 1 and layer != 0:
+        self.deltas[layer - 1] = []
         for neuron in range(self.network[layer]):
           output_weights = [item[neuron + 1] for item in self.weights[layer]]
           output_deltas = self.deltas[layer]
@@ -65,18 +69,45 @@ class NeuralNetwork:
 
   # Calcula os pesos da rede
   def _update_weights(self):
-    print(self.weights)
-    print(self.gradients)
     for layer in range(len(self.weights)):
       self.weights[layer] = self.weights[layer] - self.alpha * np.asarray(self.gradients[layer])
       
   # Treina a rede neural
-  def train(self, inputs_array, outputs_array):
-    for inputs, outputs in zip(inputs_array, outputs_array):
+  def train(self, inputs_array, outputs_array, n_ephocs=1):
+    for _ in range(n_ephocs):
+      for inputs, exp_outputs in zip(inputs_array, outputs_array):
+        self._update_outputs(inputs)
+        self._update_deltas(exp_outputs)
+        self._update_gradients()
+        self._update_weights()
+
+  # Função de custo
+  def cost(self, inputs_array, outputs_array):
+    cost = 0
+    for inputs, exp_outputs in zip(inputs_array, outputs_array):
       self._update_outputs(inputs)
-      self._update_deltas(outputs)
-      self._update_gradients()
-      self._update_weights()
+      outputs = self.outputs[-1]
+      J = -exp_outputs * math.log(outputs) - (1 - exp_outputs) * math.log(1 - outputs)
+      cost = cost + J
+    cost = cost / len(inputs_array)
+    S = [[] for layer in self.weights]
+    S_sum = (self.reg/(2*len(inputs_array)))
+
+    if self.reg != 0.0:
+      # Eleva todos os pesos ao quadrado
+      # Restaura os pesos de bias, que não devem ser elevados ao quadrado
+      for layer in range(len(self.weights)):
+        S[layer] = np.asarray(self.weights[layer]) ** 2
+        for neuron in range(len(self.weights[layer])):
+          S[layer][neuron][0] = self.weights[layer][neuron][0]
+          S_sum = S_sum + np.sum(S[layer][neuron])
+
+    return cost + S_sum
+
+  # Avalia a saída da rede para uma determinada entrada
+  def evaluate(self, inputs):
+    self._update_outputs(inputs)
+    return self.outputs[-1]
 
   # Plota um grafo representando a rede neural
   def plot(self):
