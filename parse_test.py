@@ -46,4 +46,22 @@ with open(args.initial_weights) as weights_file:
 print(f'initial_weights: {initial_weights}')
 
 # Obtém o arquivo contendo o dataset.
-dataset = open(args.dataset)
+# Ex.: 0.5, 0.7; 1.0, 0.0
+# self._update_outputs(inputs) -> inputs = [0.5, 0.7]
+# self._update_deltas(exp_outputs) -> exp_outputs = [1.0, 0.0]
+# Ex.: 0.13; 0.9
+#      0.42; 0.23
+# self._update_outputs(inputs) -> inputs = [0.13]
+# self._update_deltas(exp_outputs) -> exp_outputs = [0.9]
+# Entrada pra train: inputs_array = [0.13, 0.42]
+#                    outputs_array = [0.9, 0.23] 
+aux = []
+with open(args.dataset) as dataset_file:
+  line = dataset_file.readline()
+  while line != '':
+    aux.append([list(map(float, instance.split(',')))[0] for instance in line.split(';')])
+    line = dataset_file.readline()
+
+dataset = [list(a) for a in zip(aux[0], aux[1])]
+
+print(f'dataset: {dataset}')

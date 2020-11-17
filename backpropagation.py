@@ -42,10 +42,22 @@ with open(args.initial_weights) as weights_file:
     line = weights_file.readline()
 
 # Obtém o arquivo contendo o dataset. Este precisa ser fechado ao final do programa.
-dataset = open(args.dataset)
+aux = []
+with open(args.dataset) as dataset_file:
+  line = dataset_file.readline()
+  while line != '':
+    aux.append([list(map(float, instance.split(',')))[0] for instance in line.split(';')])
+    line = dataset_file.readline()
+
+dataset = [list(a) for a in zip(aux[0], aux[1])]
 
 # Roda a rede neural com os parametros obtidos.
-net = nn.NeuralNetwork(network, initial_weights, 0.05, lamb)
+net = nn.NeuralNetwork(network, initial_weights, 0.05, 0.0)
+
+net.train(dataset[0], dataset[1])
+
+print(f'inputs_array: {dataset[0]}')
+print(f'outputs_array: {dataset[1]}')
 
 print('Network: \n{}\n'.format(net.network))
 
